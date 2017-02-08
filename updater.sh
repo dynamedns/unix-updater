@@ -63,12 +63,13 @@ else
     # No guess
     echo "Please give a hostname with a valid suffix (either .dyname.net or .dnm.li)"
     while [[ $INPUT_HOSTNAME == "" ]] || [[ $AVAILABILITYCHECK != *"true"* ]]; do
+        echo -n "Hostname: "
+        read INPUT_HOSTNAME
+        
+        AVAILABILITYCHECK=$($DLCMD $DLARG $API/is_available?hostname=$INPUT_HOSTNAME)
         if [[ $AVAILABILITYCHECK != *"true"* ]]; then
             echo "Sorry, that hostname is invalid or already taken. Please try something else, and make sure you use a valid suffix (.dyname.net or .dnm.li)"
         fi
-        echo -n "Hostname: "
-        read INPUT_HOSTNAME
-        AVAILABILITYCHECK=$($DLCMD $DLARG $API/is_available?hostname=$INPUT_HOSTNAME)
     done
 fi
 
