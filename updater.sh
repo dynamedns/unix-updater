@@ -90,12 +90,12 @@ fi
 eval $UPDATE_CMD
 
 echo -e "\nThanks! You're all set: $INPUT_HOSTNAME now points to $IP.\nI've stored a script to update your IP in $UPDATERFILE\n"
-echo -e "To keep your hostname pointing to your IP address, I'd like to store a script in $UPDATERFILE, and add the following lines to your crontab:"
+echo -e "To keep your hostname pointing to your IP address, I'd like to add the following lines to your crontab:"
 echo "#-- Begin Dyname updater"
 echo "@reboot $UPDATERFILE"
 echo "*/5 * * * * $UPDATERFILE"
 echo "#-- End Dyname updater"
-echo -en "\nIs that OK? y/n [y] "
+echo -en "\nI can do that automatically. Is that OK? y/n [y] "
 
 read CONFIRMATION
 if [[ $CONFIRMATION != "y" && $CONFIRMATION != "" ]]; then
