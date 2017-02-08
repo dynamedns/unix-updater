@@ -63,7 +63,7 @@ else
     # No guess
     echo "Please give a hostname with a valid suffix (either .dyname.net or .dnm.li)"
     while [[ $INPUT_HOSTNAME == "" ]] || [[ $AVAILABILITYCHECK != *"true"* ]]; do
-        if [[$AVAILABILITYCHECK == *"true"* ]]; then
+        if [[ $AVAILABILITYCHECK != *"true"* ]]; then
             echo "Sorry, that hostname is invalid or already taken. Please try something else, and make sure you use a valid suffix (.dyname.net or .dnm.li)"
         fi
         echo -n "Hostname: "
