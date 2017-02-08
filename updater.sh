@@ -41,7 +41,7 @@ fi
 # Location of an updater script, should the user choose to want one
 UPDATERFILE="$HOME/.dyname/updater.sh"
 
-echo -e "Thanks for downloading the Dyname updater!\nLet me walk you through setting things up.\n"
+echo -e "**********\n\nThanks for downloading the Dyname updater!\nLet me walk you through setting things up.\n"
 echo "First, I'll need the hostname you're interested in."
 
 # We have a guess for the hostname
