@@ -37,6 +37,7 @@ initialize() {
     UPDATERFILE="$DYNAME_HOME/updater.sh"
     HOSTNAMEFILE="$DYNAME_HOME/hostname"
     SECRETFILE="$DYNAME_HOME/secret"
+    EMAILFILE="$DYNAME_HOME/email"
     MODEFILE="$DYNAME_HOME/operatingmode"
     CLIENTPORTFILE="$DYNAME_HOME/clientport"
 
@@ -56,6 +57,7 @@ first_run() {
 
 save_settings() {
     echo $INPUT_HOSTNAME > $HOSTNAMEFILE
+    echo $INPUT_EMAIL > $EMAILFILE
     echo $SECRET > $SECRETFILE
     echo $OPERATING_MODE > $MODEFILE
     echo $CLIENT_PORT > $CLIENTPORTFILE
@@ -63,6 +65,7 @@ save_settings() {
 
 load_settings() {
     INPUT_HOSTNAME=$(cat $HOSTNAMEFILE)
+    INPUT_EMAIL=$(cat $EMAILFILE)
     SECRET=$(cat $SECRETFILE)
     OPERATING_MODE=$(cat $MODEFILE)
     CLIENT_PORT=$(cat $CLIENTPORTFILE)
@@ -70,6 +73,11 @@ load_settings() {
 
 query_hostname() {
     echo "First, we'll need the hostname you're interested in."
+    
+    # Load secret from secretfile, if it exists - this enables availabilitychecks to succeed if the secret matches
+    if [[ -f $SECRETFILE ]]; then
+        SECRET=$(cat $SECRETFILE)
+    fi
 
     # We have a guess for the hostname
     if [[ $HOSTNAME_GUESS != "" ]]; then
@@ -79,12 +87,12 @@ query_hostname() {
         if [[ $INPUT_HOSTNAME == "" ]]; then
             INPUT_HOSTNAME=$HOSTNAME_GUESS
         fi
-        AVAILABILITYCHECK=$($DLCMD $DLARG $API/is_available?hostname=$INPUT_HOSTNAME&secret=$SECRET)
+        AVAILABILITYCHECK=$($DLCMD $DLARG "$API/is_available?hostname=${INPUT_HOSTNAME}&secret=$SECRET")
         while [[ $AVAILABILITYCHECK != *"true"* ]]; do
             echo "Sorry, that hostname is invalid or already taken. Please try something else, and make sure you use a valid suffix (.dyname.net or .dnm.li)"
             echo -n "Hostname: "
             read INPUT_HOSTNAME
-            AVAILABILITYCHECK=$($DLCMD $DLARG $API/is_available?hostname=$INPUT_HOSTNAME&secret=$SECRET)
+            AVAILABILITYCHECK=$($DLCMD $DLARG "$API/is_available?hostname=${INPUT_HOSTNAME}&secret=$SECRET")
         done
     else
         # No guess
@@ -93,7 +101,7 @@ query_hostname() {
             echo -n "Hostname: "
             read INPUT_HOSTNAME
             
-            AVAILABILITYCHECK=$($DLCMD $DLARG $API/is_available?hostname=$INPUT_HOSTNAME&secret=$SECRET)
+            AVAILABILITYCHECK=$($DLCMD $DLARG "$API/is_available?hostname=${INPUT_HOSTNAME}&secret=$SECRET")
             if [[ $AVAILABILITYCHECK != *"true"* ]]; then
                 echo "Sorry, that hostname is invalid or already taken. Please try something else, and make sure you use a valid suffix (.dyname.net or .dnm.li)"
             fi
