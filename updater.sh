@@ -37,6 +37,7 @@ initialize() {
     UPDATERFILE="$DYNAME_HOME/updater.sh"
     HOSTNAMEFILE="$DYNAME_HOME/hostname"
     SECRETFILE="$DYNAME_HOME/secret"
+    DOMAINSECRETFILE="$DYNAME_HOME/domainsecret"
     EMAILFILE="$DYNAME_HOME/email"
     MODEFILE="$DYNAME_HOME/operatingmode"
     CLIENTPORTFILE="$DYNAME_HOME/clientport"
@@ -59,6 +60,7 @@ save_settings() {
     echo $INPUT_HOSTNAME > $HOSTNAMEFILE
     echo $INPUT_EMAIL > $EMAILFILE
     echo $SECRET > $SECRETFILE
+    echo $DOMAINSECRET > $DOMAINSECRETFILE
     echo $OPERATING_MODE > $MODEFILE
     echo $CLIENT_PORT > $CLIENTPORTFILE
 }
@@ -67,6 +69,7 @@ load_settings() {
     INPUT_HOSTNAME=$(cat $HOSTNAMEFILE)
     INPUT_EMAIL=$(cat $EMAILFILE)
     SECRET=$(cat $SECRETFILE)
+    DOMAINSECRET=$(cat $DOMAINSECRETFILE)
     OPERATING_MODE=$(cat $MODEFILE)
     CLIENT_PORT=$(cat $CLIENTPORTFILE)
 }
@@ -79,6 +82,10 @@ query_hostname() {
         SECRET=$(cat $SECRETFILE)
     fi
 
+    if [[ -f $DOMAINSECRETFILE ]]; then
+        DOMAINSECRET=$(cat $DOMAINSECRETFILE)
+    fi
+
     # We have a guess for the hostname
     if [[ $HOSTNAME_GUESS != "" ]]; then
         echo "If our guess below is correct, just press ENTER."
@@ -87,25 +94,48 @@ query_hostname() {
         if [[ $INPUT_HOSTNAME == "" ]]; then
             INPUT_HOSTNAME=$HOSTNAME_GUESS
         fi
-        AVAILABILITYCHECK=$($DLCMD $DLARG "$API/is_available?hostname=${INPUT_HOSTNAME}&secret=$SECRET")
+
+        if [[ $INPUT_HOSTNAME != *".dyname.net" && $INPUT_HOSTNAME != *".dnm.li" ]]; then
+            query_domainsecret
+        fi
+
+        AVAILABILITYCHECK=$($DLCMD $DLARG "$API/is_available?hostname=${INPUT_HOSTNAME}&secret=$SECRET&domainsecret=$DOMAINSECRET")
         while [[ $AVAILABILITYCHECK != *"true"* ]]; do
-            echo "Sorry, that hostname is invalid or already taken. Please try something else, and make sure you use a valid suffix (.dyname.net or .dnm.li)"
+            echo "Sorry, that hostname is invalid or unavailable. Please try something else, and make sure you use a valid suffix (.dyname.net or .dnm.li)"
             echo -n "Hostname: "
             read INPUT_HOSTNAME
-            AVAILABILITYCHECK=$($DLCMD $DLARG "$API/is_available?hostname=${INPUT_HOSTNAME}&secret=$SECRET")
+            if [[ $INPUT_HOSTNAME != *".dyname.net" && $INPUT_HOSTNAME != *".dnm.li" ]]; then
+                query_domainsecret
+            fi
+            AVAILABILITYCHECK=$($DLCMD $DLARG "$API/is_available?hostname=${INPUT_HOSTNAME}&secret=$SECRET&domainsecret=$DOMAINSECRET")
         done
     else
         # No guess
-        echo "Please give a hostname with a valid suffix (either .dyname.net or .dnm.li)"
+        echo "Please give a hostname, including a valid suffix (the current public choices are .dyname.net, .dnm.li)"
         while [[ $INPUT_HOSTNAME == "" ]] || [[ $AVAILABILITYCHECK != *"true"* ]]; do
             echo -n "Hostname: "
             read INPUT_HOSTNAME
-            
-            AVAILABILITYCHECK=$($DLCMD $DLARG "$API/is_available?hostname=${INPUT_HOSTNAME}&secret=$SECRET")
+            if [[ $INPUT_HOSTNAME != *".dyname.net" && $INPUT_HOSTNAME != *".dnm.li" ]]; then
+                query_domainsecret
+            fi
+            AVAILABILITYCHECK=$($DLCMD $DLARG "$API/is_available?hostname=${INPUT_HOSTNAME}&secret=$SECRET&domainsecret=$DOMAINSECRET")
             if [[ $AVAILABILITYCHECK != *"true"* ]]; then
-                echo "Sorry, that hostname is invalid or already taken. Please try something else, and make sure you use a valid suffix (.dyname.net or .dnm.li)"
+                echo "Sorry, that hostname is invalid or unavailable. Please try something else, and make sure you use a valid suffix (.dyname.net or .dnm.li)"
             fi
         done
+    fi
+}
+
+query_domainsecret() {
+    echo -e "\nAs you are using a non-public domain, you will need to enter a valid Domain Secret."
+    if [[ "$DOMAINSECRET" != "" ]]; then
+        echo -n "Domain Secret [$DOMAINSECRET]: "
+    else
+        echo -n "Domain Secret: "
+    fi
+    read INPUT_DOMAINSECRET
+    if [[ "$INPUT_DOMAINSECRET" != "" ]]; then
+        DOMAINSECRET=$INPUT_DOMAINSECRET
     fi
 }
 
@@ -145,7 +175,7 @@ query_mode() {
 }
 
 map_ip() {
-    UPDATER_URL="$API_PROTOCOL://$INPUT_EMAIL:$SECRET@$API_HOSTNAME/nic/update?hostname=$INPUT_HOSTNAME&myip=$FORCE_IP"
+    UPDATER_URL="$API_PROTOCOL://$INPUT_EMAIL:$SECRET@$API_HOSTNAME/nic/update?hostname=$INPUT_HOSTNAME&myip=$FORCE_IP&domainsecret=$DOMAINSECRET"
 
     if [[ "$DLCMD" == "wget" ]]; then
         UPDATE_CMD="$DLCMD $DLARG --auth-no-challenge --http-user=$INPUT_EMAIL --http-password=$SECRET \"$UPDATER_URL\" > /dev/null"
