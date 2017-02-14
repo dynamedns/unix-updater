@@ -148,7 +148,7 @@ query_email() {
 
 create_dynatunnel() {
     if [[ ! -x `which ssh` ]]; then
-        echo "Sorry, DynaTunnel requires ssh installed and in the PATH."
+        echo "Sorry, Developer mode requires ssh installed and in the PATH."
         exit 1
     fi
 
@@ -169,7 +169,7 @@ create_dynatunnel() {
 
 query_mode() {
     echo -e "\nDyname has two operating modes:\n\n1) Traditional Dynamic DNS, where the hostname is pointed to your IP address."
-    echo -e "2) DynaTunnel, which exposes a HTTP server on your local machine to your hostname, even if you are behind NAT or a firewall."
+    echo -e "2) Developer mode, which exposes any development HTTP server on your local machine to your hostname, even if you are behind NAT or a firewall."
     echo -en "\nChoose operating mode [1]: "
     read OPERATING_MODE
 }
